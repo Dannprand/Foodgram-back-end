@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model LibraryRecipe {
+  library_recipe_id Int    @id @default(autoincrement())
+  title             String @db.VarChar(255)
+  caption           String @db.VarChar(255)
+  image_url         String @db.VarChar(255)
+  User              User[]
+
+  @@map("library_recipes")
+}
+
+model Location {
+  location_id Int    @id @default(autoincrement())
+  name        String @db.VarChar(255)
+  address     String @db.VarChar(255)
+
+  @@map("locations")
+}
+
+model Tag {
+  tag_id  Int       @id @default(autoincrement())
+  name    String    @db.VarChar(255)
+  PostTag PostTag[]
+
+  @@map("tags")
+}
+
+model User {
+  user_id           Int    @id @default(autoincrement())
+  username          String @db.VarChar(255)
+  email             String @db.VarChar(255)
+  password          String @db.Char(60)
+  profile_image     String @default("images/user.png") @db.VarChar(255)
+  token             String @db.VarChar(255)
+  library_recipe_id Int?   @db.Integer
+
+  libraryRecipe LibraryRecipe? @relation(fields: [library_recipe_id], references: [library_recipe_id], onDelete: Cascade, onUpdate: Cascade)
+  Post          Post[]
+  Comment       Comment[]
+  Like          Like[]
+  Rating        Rating[]
+
+  @@map("users")
+}
+
+model Post {
+  post_id   Int    @id @default(autoincrement())
+  image_url String @db.VarChar(255)
+  caption   String @db.VarChar(255)
+  title     String @db.VarChar(255)
+  user_id   Int
+
+  user    User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  PostTag PostTag[]
+  Comment Comment[]
+  Like    Like[]
+  Rating  Rating[]
+
+  @@map("posts")
+}
+
+model PostTag {
+  post_id Int
+  tag_id  Int
+
+  Post Post @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: Cascade)
+  Tag  Tag  @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([post_id, tag_id])
+  @@map("post_tags")
+}
+
+model Comment {
+  comment_id Int    @id @default(autoincrement())
+  content    String @db.VarChar(255)
+  user_id    Int
+  post_id    Int
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  post Post @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("comments")
+}
+
+model Like {
+  like_id Int @id @default(autoincrement())
+  user_id Int
+  post_id Int
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  post Post @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("likes")
+}
+
+model Rating {
+  rating_id Int @id @default(autoincrement())
+  rating    Int @db.Integer
+  user_id   Int
+  post_id   Int
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  post Post @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("ratings")
+}
